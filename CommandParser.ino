@@ -30,13 +30,12 @@ void doLoop(){
 }
 
 void getComando(){
-	Serial.println("Interpretando comando...");
+	//Serial.println("Interpretando comando...");
 
 	CommandParser::parseCommand(Serial.readString(), &cmdBuffer);
 
-	Serial.println("Encontrado: " + cmdBuffer.name);
-	if(cmdBuffer.argCount > 0) cmdBuffer.printArgs();
-
+	//Serial.print(cmdBuffer.name);
+	//cmdBuffer.printArgs();
 	executeCommand(&cmdBuffer);
 }
 
@@ -62,7 +61,7 @@ void executeCommand(Command* cmd){
 	}else if((cmd->name == "loop" || cmd->name == "execute") && !shouldLoop && cmd->argCount >= 1){
     	//execute(expression) | loop(expression, repetitions) | loop(expression)
 		CommandParser::parseExpression(cmd->args[0], &loopExpression);
-    	if(cmd->argCount == 2){
+    	if(cmd->argCount == 2 || (cmd->argCount == 1 && cmd->name == "execute")){
     		bancada.executaExpression(&loopExpression, cmd->name == "loop" ? cmd->args[1].toInt() : 1);
     	}else{
     		shouldLoop = true;
@@ -72,10 +71,23 @@ void executeCommand(Command* cmd){
     	//atuar(nome, estado)
     	bancada.atuar(cmd->args[0],
                 	  cmd->args[1].toInt());
-	}else if(cmd->name == "parar" && shouldLoop){
+	}else if(cmd->name == "help" && !shouldLoop){
+		//help
+		Serial.println("Comandos:\n");
+		Serial.println("\n- addAtuadorDigital([nome do atuador], [porta], [estado inicial], [tempo de atuação])\n   Adiciona um atuador digital à bancada");
+		Serial.println("\n- removeAtuador([nome do atuador])\n   Remove um atuador da bancada pelo nome");
+		Serial.println("\n- listAtuadores()\n   Lista os atuadores já adicionados na bancada por nome");
+		Serial.println("\n- atuar([nome do atuador], [estado desejado])\n   Coloca um atuador em um estado desejado");
+		Serial.println("\n- execute([expressão])\n   Executa uma expressão");
+		Serial.println("\n- loop([expressão], [número de repetições])\n   Executa uma expressão um número determinado de vezes");
+		Serial.println("\n- loop([expressão])\n   Executa uma expressão até que seja interrompido");
+		Serial.println("\n- parar()\n   Interrompe a execução de um loop");
+    }else if(cmd->name == "parar" && shouldLoop){
 		//parar
 		Serial.println("Parando loop");
     	shouldLoop = false;
+    }else{
+    	Serial.println("Comando não reconhecido");
     }
     
 }
